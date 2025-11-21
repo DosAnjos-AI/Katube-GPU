@@ -118,15 +118,19 @@ ENERGY_THRESHOLD = 0.01  # threshold minimo de energia
 SPECTRAL_CENTROID_THRESHOLD = 1000  # Hz (deteccao de fala)
 
 # ============================================================================
-# ETAPA 03: Filtro MOS
+# ETAPA 03: Filtro MOS (SHEET 3-tier)
 # ============================================================================
 
-# Threshold MOS (3-tier)
-MOS_THRESHOLD_LOW = 2.5      # Abaixo = rejeitado
-MOS_THRESHOLD_HIGH = 3.0     # Acima = aprovado direto
+# Batch size para processamento MOS
+BATCH_SIZE_MOS = 15  # ajustar conforme VRAM disponivel
 
-# Batch size para MOS
-BATCH_SIZE_MOS = 15
+# Thresholds MOS (escala 1.0-5.0)
+MOS_THRESHOLD_LOW = 2.5   # Abaixo = rejeitado
+MOS_THRESHOLD_HIGH = 3.0  # Acima ou igual = aprovado direto
+# Entre 2.5-3.0 = intermediario (vai para denoising na etapa 12)
+
+# Fallback automatico GPU->CPU se OOM
+MOS_ENABLE_CPU_FALLBACK = True
 
 # ============================================================================
 # ETAPA 04-06: Diarizacao

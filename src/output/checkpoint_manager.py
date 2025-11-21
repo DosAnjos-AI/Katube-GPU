@@ -147,3 +147,68 @@ class CheckpointManager:
             return True
 
         return False
+
+    def update_segments_with_mos(
+        self,
+        video_id: str,
+        mos_results: Dict
+    ):
+        """
+        Atualiza checkpoint adicionando scores MOS aos segmentos existentes.
+
+        Args:
+            video_id: ID do video
+            mos_results: Resultado do filtro MOS
+        """
+        checkpoint = self.load_checkpoint(video_id)
+
+        if not checkpoint:
+            logger.error(f"Checkpoint nao encontrado para {video_id}")
+            return
+
+        # Obter segmentos do checkpoint da segmentacao
+        if '02_segmentacao' not in checkpoint['etapas']:
+            logger.error("Checkpoint de segmentacao nao encontrado")
+            return
+
+        segments_data = checkpoint['etapas']['02_segmentacao']['data']['segments']
+
+        # Merge MOS scores
+        # Combinar approved, intermediate, rejected
+        all_mos = (
+            mos_results.get('approved', []) +
+            mos_results.get('intermediate', []) +
+            mos_results.get('rejected', [])
+        )
+
+        for mos_segment in all_mos:
+            segment_id = mos_segment['segment_id']
+
+            # Atualizar segmento existente
+            for seg in segments_data:
+                if seg['segment_id'] == segment_id:
+                    seg['mos_score'] = mos_segment['mos_score']
+                    seg['mos_tier'] = mos_segment['mos_tier']
+                    if 'mos_error' in mos_segment:
+                        seg['mos_error'] = mos_segment['mos_error']
+                    break
+
+        # Salvar checkpoint atualizado
+        checkpoint['etapas']['02_segmentacao']['data']['segments'] = segments_data
+
+        # Salvar diretamente no arquivo
+        checkpoint_path = self.checkpoint_dir / f"{video_id}.json"
+        with open(checkpoint_path, 'w', encoding='utf-8') as f:
+            json.dump(checkpoint, f, indent=2, ensure_ascii=False)
+
+        # Adicionar etapa MOS
+        self.save_checkpoint(
+            video_id=video_id,
+            etapa='03_mos_filter',
+            data={
+                'processing_time_s': mos_results.get('processing_time_s', 0.0),
+                'stats': mos_results.get('stats', {})
+            }
+        )
+
+        logger.info(f"Checkpoint atualizado com scores MOS")
