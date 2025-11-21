@@ -1,0 +1,2 @@
+# Dependencias do Katube 2025
+# Sera preenchido no PROMPT 16
