@@ -212,3 +212,43 @@ class CheckpointManager:
         )
 
         logger.info(f"Checkpoint atualizado com scores MOS")
+
+    def save_diarization_results(
+        self,
+        video_id: str,
+        diarization_results: Dict
+    ) -> None:
+        """
+        Salva resultados da diarizacao no checkpoint.
+
+        Args:
+            video_id: ID do video
+            diarization_results: Resultado do Diarizer.diarize_batch()
+        """
+        # Estruturar dados para checkpoint
+        checkpoint_data = {
+            'total_segments': diarization_results['total_segments'],
+            'processed_count': len(diarization_results['processed']),
+            'failed_count': len(diarization_results['failed']),
+            'stats': diarization_results['stats'],
+            'segments': {}
+        }
+
+        # Adicionar dados de cada segmento processado
+        for result in diarization_results['processed']:
+            segment_id = result['segment_id']
+            checkpoint_data['segments'][segment_id] = {
+                'num_speakers': result['num_speakers'],
+                'speakers': result['speakers'],
+                'rttm_path': result['rttm_path'],
+                'json_path': result['json_path']
+            }
+
+        # Salvar no checkpoint
+        self.save_checkpoint(
+            video_id=video_id,
+            etapa='04_diarizacao',
+            data=checkpoint_data
+        )
+
+        logger.info(f"Checkpoint atualizado com dados de diarizacao")

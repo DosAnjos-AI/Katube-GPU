@@ -14,5 +14,9 @@ pydub>=0.25.0
 # Segmentacao
 webrtcvad>=2.0.10
 
+# Diarizacao
+pyannote.audio>=3.1.0
+python-dotenv>=1.0.0
+
 # Utilities
 tqdm>=4.65.0

@@ -133,14 +133,26 @@ MOS_THRESHOLD_HIGH = 3.0  # Acima ou igual = aprovado direto
 MOS_ENABLE_CPU_FALLBACK = True
 
 # ============================================================================
-# ETAPA 04-06: Diarizacao
+# ETAPA 04: Diarizacao de Speakers
 # ============================================================================
 
-# HuggingFace token (obrigatorio para pyannote)
-HUGGINGFACE_TOKEN = ""  # Preencher
+# Modelo pyannote (requer HuggingFace token em .env)
+DIARIZATION_MODEL = "pyannote/speaker-diarization-3.1"
 
-# Modelo de diarizacao
-PYANNOTE_MODEL = "pyannote/speaker-diarization-3.1"
+# Deteccao automatica de speakers (None = auto-detect)
+EXPECTED_NUM_SPEAKERS = None  # int ou None
+
+# Merge de segmentos consecutivos do mesmo speaker
+# Gap maximo entre segmentos para mesclar (segundos)
+DIARIZATION_MERGE_GAP = 0.5  # Se speaker fala novamente em <=0.5s, mescla
+
+# Filtro de speakers por duracao minima
+# Ignora speakers com menos de X segundos de fala total
+MIN_SPEAKER_DURATION = 2.0  # segundos
+
+# Duracao minima de um segmento individual de fala
+# Remove segmentos muito curtos (provavelmente ruido)
+MIN_SEGMENT_DURATION = 0.5  # segundos
 
 # ============================================================================
 # ETAPA 08-09: STT
