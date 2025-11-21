@@ -11,5 +11,8 @@ librosa>=0.10.0
 soundfile>=0.12.0
 pydub>=0.25.0
 
+# Segmentacao
+webrtcvad>=2.0.10
+
 # Utilities
 tqdm>=4.65.0

@@ -90,18 +90,32 @@ FFMPEG_TIMEOUT = 300
 OUTPUT_CHANNELS = 1
 
 # ============================================================================
-# ETAPA 02: Segmentacao
+# ETAPA 02: Segmentacao Inteligente
 # ============================================================================
 
-# Duracao minima de segmento (segundos)
-SEGMENT_MIN_DURATION = 10.0
+# Validacao de audio ORIGINAL (antes de segmentar)
+AUDIO_MIN_DURATION_TOLERANCE = 10     # segundos (rejeita se menor)
+AUDIO_MAX_DURATION_TOLERANCE = 7200   # segundos (2h, rejeita se maior)
 
-# Duracao maxima de segmento (segundos)
-SEGMENT_MAX_DURATION = 60.0
+# Duracao dos segmentos gerados
+SEGMENT_MIN_DURATION = 4.0   # segundos
+SEGMENT_MAX_DURATION = 18.0  # segundos
 
-# Validacao de duracao de audio completo
-AUDIO_MIN_DURATION = 60      # 1 minuto
-AUDIO_MAX_DURATION = 7200    # 2 horas
+# Overlap entre segmentos (evita perder palavras nas bordas)
+SEGMENT_OVERLAP = 0.5  # segundos
+
+# WebRTC VAD - Configuracoes
+VAD_MODE = 2  # 0=menos agressivo, 3=mais agressivo (2=balanceado)
+VAD_FRAME_DURATION = 30  # ms (10, 20 ou 30)
+
+# Deteccao de silencio
+SILENCE_THRESHOLD_DB = -35  # dB (pausas naturais)
+MIN_SILENCE_DURATION = 0.2  # segundos (minimo para cortar)
+MAX_SILENCE_DURATION = 2.0  # segundos (maximo pausa natural)
+
+# Analise espectral
+ENERGY_THRESHOLD = 0.01  # threshold minimo de energia
+SPECTRAL_CENTROID_THRESHOLD = 1000  # Hz (deteccao de fala)
 
 # ============================================================================
 # ETAPA 03: Filtro MOS
