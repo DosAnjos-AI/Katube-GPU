@@ -295,3 +295,152 @@ class CheckpointManager:
             f"{results['approved_count']} aprovados, "
             f"{results['rejected_count']} rejeitados"
         )
+
+    def get_segment_offset(
+        self,
+        video_id: str,
+        segment_id: str
+    ) -> float:
+        """
+        Carrega offset absoluto do segmento desde o checkpoint.
+
+        Args:
+            video_id: ID do video
+            segment_id: ID do segmento (ex: video_id_seg_001)
+
+        Returns:
+            Offset em segundos (absolute_start do segmento)
+        """
+        checkpoint = self.load_checkpoint(video_id)
+
+        if not checkpoint:
+            logger.warning(f"Checkpoint nao encontrado para {video_id}")
+            return 0.0
+
+        # Buscar na etapa de segmentacao
+        if '02_segmentacao' not in checkpoint.get('etapas', {}):
+            logger.warning("Etapa de segmentacao nao encontrada no checkpoint")
+            return 0.0
+
+        segments_data = checkpoint['etapas']['02_segmentacao']['data'].get('segments', [])
+
+        # Buscar segmento especifico
+        for seg in segments_data:
+            if seg.get('segment_id') == segment_id:
+                return seg.get('absolute_start', 0.0)
+
+        logger.warning(f"Segmento {segment_id} nao encontrado no checkpoint")
+        return 0.0
+
+    def save_speaker_separation_results(
+        self,
+        video_id: str,
+        results: Dict
+    ) -> None:
+        """
+        Salva resultados da separacao de speakers no checkpoint.
+
+        Args:
+            video_id: ID do video
+            results: Resultados do SpeakerSeparator.process_batch()
+        """
+        # Estruturar dados para checkpoint
+        data = {
+            'total_segments': results['stats']['total_segments'],
+            'processed_count': results['stats']['processed_count'],
+            'failed_count': results['stats']['failed_count'],
+            'total_speakers': results['stats']['total_speakers'],
+            'speakers_list': results['stats']['speakers_list'],
+            'total_subsegments': results['stats']['total_subsegments'],
+            'stt_ready_dir': results['stt_ready_dir'],
+            'segments': {}
+        }
+
+        # Adicionar dados de cada segmento processado
+        for processed in results['processed']:
+            segment_id = processed['segment_id']
+            data['segments'][segment_id] = {
+                'speakers': {}
+            }
+
+            for speaker_id, files in processed['speakers'].items():
+                data['segments'][segment_id]['speakers'][speaker_id] = []
+
+                for file_info in files:
+                    data['segments'][segment_id]['speakers'][speaker_id].append({
+                        'file': file_info['file'],
+                        'absolute_start': file_info['absolute_start'],
+                        'absolute_end': file_info['absolute_end'],
+                        'duration': file_info['duration']
+                    })
+
+        # Salvar no checkpoint
+        self.save_checkpoint(
+            video_id=video_id,
+            etapa='06_speaker_separation',
+            data=data
+        )
+
+        logger.info(
+            f"Checkpoint atualizado (speaker separation): "
+            f"{results['stats']['total_subsegments']} subsegmentos, "
+            f"{results['stats']['total_speakers']} speakers"
+        )
+
+    def update_segments_with_speakers(
+        self,
+        video_id: str,
+        speaker_results: Dict
+    ) -> None:
+        """
+        Atualiza segmentos existentes com informacoes de speakers.
+
+        Adiciona lista de speakers e subsegmentos a cada segmento
+        no checkpoint de segmentacao.
+
+        Args:
+            video_id: ID do video
+            speaker_results: Resultados do SpeakerSeparator.process_batch()
+        """
+        checkpoint = self.load_checkpoint(video_id)
+
+        if not checkpoint:
+            logger.error(f"Checkpoint nao encontrado para {video_id}")
+            return
+
+        if '02_segmentacao' not in checkpoint.get('etapas', {}):
+            logger.error("Etapa de segmentacao nao encontrada")
+            return
+
+        segments_data = checkpoint['etapas']['02_segmentacao']['data']['segments']
+
+        # Processar cada segmento com speakers
+        for processed in speaker_results.get('processed', []):
+            segment_id = processed['segment_id']
+
+            # Encontrar segmento na lista
+            for seg in segments_data:
+                if seg.get('segment_id') == segment_id:
+                    # Adicionar dados de speakers
+                    seg['speakers'] = {}
+
+                    for speaker_id, files in processed['speakers'].items():
+                        seg['speakers'][speaker_id] = []
+
+                        for file_info in files:
+                            seg['speakers'][speaker_id].append({
+                                'file': file_info['file'],
+                                'absolute_start': file_info['absolute_start'],
+                                'absolute_end': file_info['absolute_end'],
+                                'duration': file_info['duration']
+                            })
+                    break
+
+        # Salvar checkpoint atualizado
+        checkpoint['etapas']['02_segmentacao']['data']['segments'] = segments_data
+
+        checkpoint_path = self.checkpoint_dir / f"{video_id}.json"
+        with open(checkpoint_path, 'w', encoding='utf-8') as f:
+            json.dump(checkpoint, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"Segmentos atualizados com dados de speakers")

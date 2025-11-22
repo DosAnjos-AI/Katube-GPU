@@ -176,6 +176,30 @@ OVERLAP_WINDOW_SIZE = 1.0  # segundos
 OVERLAP_HOP_SIZE = 0.5     # segundos (50% overlap)
 
 # ============================================================================
+# ETAPA 06: Separacao de Speakers
+# ============================================================================
+
+# Duracao minima de um subsegmento de speaker
+# Subsegmentos menores sao descartados
+SPEAKER_SEP_MIN_DURATION = 3.0   # segundos
+
+# Duracao maxima de um subsegmento de speaker
+SPEAKER_SEP_MAX_DURATION = 18.0  # segundos
+
+# Gap maximo entre segmentos consecutivos do mesmo speaker para merge
+# Se speaker fala novamente em <= X segundos, mescla os segmentos
+SPEAKER_SEP_MAX_GAP = 1.5  # segundos
+
+# Aplicar audio enhancement (filtros high-pass/low-pass)
+SPEAKER_SEP_ENHANCE_AUDIO = True
+
+# Frequencia de corte para high-pass filter (remove ruido grave)
+SPEAKER_SEP_HIGHPASS_FREQ = 80  # Hz
+
+# Frequencia de corte para low-pass filter (remove ruido agudo)
+SPEAKER_SEP_LOWPASS_FREQ = 8000  # Hz
+
+# ============================================================================
 # ETAPA 08-09: STT
 # ============================================================================
 
