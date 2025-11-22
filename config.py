@@ -155,6 +155,27 @@ MIN_SPEAKER_DURATION = 2.0  # segundos
 MIN_SEGMENT_DURATION = 0.5  # segundos
 
 # ============================================================================
+# ETAPA 05: Overlap Detection (OSD)
+# ============================================================================
+
+# Modelo pyannote para deteccao de overlap
+OVERLAP_DETECTION_MODEL = "pyannote/segmentation-3.0"
+
+# Threshold de overlap para rejeitar segmento
+# Se overlap >= threshold, o segmento eh descartado
+# 0.9 = 90% do segmento tem overlap
+OVERLAP_THRESHOLD = 0.9  # 0.0-1.0
+
+# Duracao minima de overlap para considerar
+# Ignora overlaps muito curtos (< X segundos)
+MIN_OVERLAP_DURATION = 0.3  # segundos
+
+# Analise de overlap em janelas
+# Divide segmento em janelas para analise mais precisa
+OVERLAP_WINDOW_SIZE = 1.0  # segundos
+OVERLAP_HOP_SIZE = 0.5     # segundos (50% overlap)
+
+# ============================================================================
 # ETAPA 08-09: STT
 # ============================================================================
 

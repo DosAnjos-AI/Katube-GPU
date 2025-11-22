@@ -252,3 +252,46 @@ class CheckpointManager:
         )
 
         logger.info(f"Checkpoint atualizado com dados de diarizacao")
+
+    def save_overlap_detection_results(
+        self,
+        video_id: str,
+        results: Dict
+    ) -> None:
+        """
+        Salva resultados da deteccao de overlap no checkpoint.
+
+        Args:
+            video_id: ID do video
+            results: Resultados do OverlapDetector.process_batch()
+        """
+        # Extrair dados principais
+        data = {
+            'total_segments': results['total_segments'],
+            'approved_count': results['approved_count'],
+            'rejected_count': results['rejected_count'],
+            'failed_count': results['failed_count'],
+            'stats': results['stats'],
+            'approved': self._make_serializable(results['approved']),
+            'rejected': [
+                {
+                    'segment_id': seg['segment_id'],
+                    'audio_path': seg.get('audio_path', seg.get('file_path', '')),
+                    'overlap_ratio': seg.get('overlap_detection', {}).get('overlap_ratio', 0.0)
+                }
+                for seg in results['rejected']
+            ]
+        }
+
+        # Salvar no checkpoint
+        self.save_checkpoint(
+            video_id=video_id,
+            etapa='05_overlap_detection',
+            data=data
+        )
+
+        logger.info(
+            f"Checkpoint atualizado (overlap detection): "
+            f"{results['approved_count']} aprovados, "
+            f"{results['rejected_count']} rejeitados"
+        )
